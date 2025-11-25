@@ -5,6 +5,7 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     cartographer_config_dir = os.path.join(get_package_share_directory('cartographer_slam'), 'config')
+    configuration_basename = 'cartographer_sim.lua'
 
     return LaunchDescription([
         Node(
