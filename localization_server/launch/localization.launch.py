@@ -2,7 +2,7 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, PythonExpression
 from launch_ros.actions import Node
 
 def generate_launch_description():
@@ -20,7 +20,17 @@ def generate_launch_description():
     map_file_path = PathJoinSubstitution([map_server_dir, 'config', map_file_arg])
 
     localization_dir = get_package_share_directory('localization_server')
-    nav2_yaml = os.path.join(localization_dir, 'config', 'amcl_config_sim.yaml')
+
+    # Determine use_sim_time and AMCL config based on map file
+    use_sim_time = PythonExpression([
+        "'warehouse_map_real.yaml' not in '", map_file_arg, "'"
+    ])
+
+    nav2_yaml = PythonExpression([
+        "'", localization_dir, "/config/amcl_config_real.yaml' if 'warehouse_map_real.yaml' in '",
+        map_file_arg, "' else '", localization_dir, "/config/amcl_config_sim.yaml'"
+    ])
+
     rviz_config_dir = os.path.join(localization_dir, 'rviz', 'localization.rviz')
 
     # Map server node
@@ -29,7 +39,7 @@ def generate_launch_description():
         executable='map_server',
         name='map_server',
         output='screen',
-        parameters=[{'use_sim_time': True},
+        parameters=[{'use_sim_time': use_sim_time},
                     {'yaml_filename': map_file_path}]
     )
 
@@ -46,7 +56,7 @@ def generate_launch_description():
             executable='lifecycle_manager',
             name='lifecycle_manager_localization',
             output='screen',
-            parameters=[{'use_sim_time': True},
+            parameters=[{'use_sim_time': use_sim_time},
                         {'autostart': True},
                         {'node_names': ['map_server', 'amcl']}]
         )
@@ -57,7 +67,7 @@ def generate_launch_description():
         executable='rviz2',
         name='rviz2',
         arguments=['-d', rviz_config_dir],
-        parameters=[{'use_sim_time': True}],
+        parameters=[{'use_sim_time': use_sim_time}],
         output='screen'
     )
 
