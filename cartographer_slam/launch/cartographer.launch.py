@@ -2,7 +2,7 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch_ros.actions import Node
 
 def generate_launch_description():
@@ -17,7 +17,11 @@ def generate_launch_description():
 
     # Get package directories
     cartographer_config_dir = os.path.join(get_package_share_directory('cartographer_slam'), 'config')
-    configuration_basename = 'cartographer_sim.lua'
+
+    # Select configuration file based on use_sim_time
+    configuration_basename = PythonExpression([
+        "'cartographer_sim.lua' if '", use_sim_time, "' == 'True' else 'cartographer_real.lua'"
+    ])
 
     rviz_config_dir = os.path.join(get_package_share_directory('cartographer_slam'), 'rviz', 'mapping.rviz')
 
