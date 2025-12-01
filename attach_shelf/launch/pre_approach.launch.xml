@@ -1,0 +1,17 @@
+<launch>
+  <!-- Launch file for pre_approach node with RViz visualization -->
+
+  <!-- Parameters -->
+  <arg name="obstacle" default="0.3" description="Distance to obstacle in meters at which robot stops"/>
+  <arg name="degrees" default="-90" description="Degrees to rotate after stopping (negative = right turn)"/>
+
+  <!-- Pre-approach node -->
+  <node pkg="attach_shelf" exec="pre_approach_node" name="pre_approach_node" output="screen">
+    <param name="obstacle" value="$(var obstacle)"/>
+    <param name="degrees" value="$(var degrees)"/>
+  </node>
+
+  <!-- RViz visualization with config file -->
+  <node pkg="rviz2" exec="rviz2" name="rviz2" output="screen" args="-d $(find-pkg-share attach_shelf)/rviz/config.rviz"/>
+
+</launch>
