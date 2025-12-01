@@ -7,6 +7,8 @@ Panels:
         - /Global Options1
         - /Status1
         - /Map1/Topic1
+        - /PoseWithCovariance1
+        - /PoseWithCovariance1/Topic1
         - /ParticleCloud1/Topic1
       Splitter Ratio: 0.5
     Tree Height: 553
@@ -27,7 +29,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: ""
+    SyncSource: LaserScan
 Visualization Manager:
   Class: ""
   Displays:
@@ -75,6 +77,8 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: true
+        map:
+          Value: true
         odom:
           Value: true
         robot_base_docking_contact_link:
@@ -103,7 +107,25 @@ Visualization Manager:
       Show Axes: true
       Show Names: false
       Tree:
-        {}
+        map:
+          odom:
+            robot_base_footprint:
+              robot_base_link:
+                robot_evelator_base_link:
+                  {}
+                robot_front_cover_link:
+                  robot_base_docking_contact_link:
+                    {}
+                robot_front_laser_base_link:
+                  {}
+                robot_omni_backwheel_link:
+                  {}
+                robot_omni_front_leftwheel_link:
+                  {}
+                robot_omni_front_rightwheel_link:
+                  {}
+              robot_top_cover_link:
+                {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -128,8 +150,8 @@ Visualization Manager:
       Position Transformer: XYZ
       Selectable: true
       Size (Pixels): 3
-      Size (m): 0.009999999776482582
-      Style: Flat Squares
+      Size (m): 0.02500000037252903
+      Style: Spheres
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -169,11 +191,11 @@ Visualization Manager:
       Shape: Arrow
       Topic:
         Depth: 5
-        Durability Policy: Volatile
+        Durability Policy: Transient Local
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /initialpose
+        Value: /amcl_pose
       Value: true
     - Alpha: 1
       Class: nav2_rviz_plugins/ParticleCloud
@@ -252,7 +274,7 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.5708
+      Pitch: 1.5697963237762451
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
       Yaw: 0
