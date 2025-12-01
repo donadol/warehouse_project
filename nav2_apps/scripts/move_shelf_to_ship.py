@@ -28,7 +28,7 @@ from attach_shelf.srv import GoToLoading
 POSITIONS = {
     'init': [5.62939, -1.64341, -0.999989, 0.00460709],
     'loading': [-0.376686, -1.23018, 0.707107, 0.707107],
-    'shipping': [3.14879, -3.30941, -0.714135, 0.700008],
+    'shipping': [3.14879, -3.30941, -0.7071068, 0.7071068],
 }
 
 # Footprint definitions (octagon shapes)
