@@ -3,12 +3,15 @@
 <package format="3">
   <name>nav2_apps</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>Nav2 applications for warehouse robot tasks using Simple Commander API</description>
   <maintainer email="user@todo.todo">user</maintainer>
   <license>TODO: License declaration</license>
 
   <depend>rclpy</depend>
   <depend>geometry_msgs</depend>
+  <depend>nav2_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>attach_shelf</depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
