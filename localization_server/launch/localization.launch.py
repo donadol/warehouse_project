@@ -98,6 +98,8 @@ def generate_launch_description():
         declare_map_file_argument,
         map_server_node,
         amcl_node,
+        filter_mask_server,
+        costmap_filter_info_server,
         lifecycle_manager_node,
         rviz_node
     ])

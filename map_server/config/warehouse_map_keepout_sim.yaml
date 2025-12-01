@@ -1,4 +1,5 @@
 image: warehouse_map_keepout_sim.pgm
+mode: trinary
 resolution: 0.05
 origin: [-1.13, -4.16, 0]
 negate: 0

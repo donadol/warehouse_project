@@ -90,13 +90,22 @@ def launch_setup(context, *args, **kwargs):
         output='screen'
     )
 
+    # Approach service server node
+    approach_service_server_node = Node(
+        package='attach_shelf',
+        executable='approach_service_server_node',
+        output='screen',
+        name='approach_service_server'
+    )
+
     return [
         planner_server_node,
         controller_server_node,
         bt_navigator_node,
         recoveries_server_node,
         lifecycle_manager_node,
-        rviz_node
+        rviz_node,
+        approach_service_server_node
     ]
 
 def generate_launch_description():
