@@ -1,7 +1,7 @@
 from launch import LaunchDescription
 from launch_ros.actions import Node
 from launch.actions import DeclareLaunchArgument, TimerAction
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PythonExpression
 from ament_index_python.packages import get_package_share_directory
 import os
 
@@ -12,6 +12,12 @@ def generate_launch_description():
     rviz_config_file = os.path.join(pkg_attach_shelf, 'rviz', 'config.rviz')
 
     # Declare launch arguments
+    use_sim_time_arg = DeclareLaunchArgument(
+        'use_sim_time',
+        default_value='true',
+        description='Use simulation time'
+    )
+
     obstacle_arg = DeclareLaunchArgument(
         'obstacle',
         default_value='0.3',
@@ -31,16 +37,24 @@ def generate_launch_description():
     )
 
     # Get launch configurations
+    use_sim_time = LaunchConfiguration('use_sim_time')
     obstacle = LaunchConfiguration('obstacle')
     degrees = LaunchConfiguration('degrees')
     final_approach = LaunchConfiguration('final_approach')
+
+    # Select parameter file based on use_sim_time
+    params_file = PythonExpression([
+        "'", pkg_attach_shelf, "/config/approach_params_real.yaml' if '",
+        use_sim_time, "' == 'false' else '", pkg_attach_shelf, "/config/approach_params_sim.yaml'"
+    ])
 
     # Approach service server node
     approach_service_server_node = Node(
         package='attach_shelf',
         executable='approach_service_server_node',
         output='screen',
-        name='approach_service_server'
+        name='approach_service_server',
+        parameters=[params_file, {'use_sim_time': use_sim_time}]
     )
 
     # Pre-approach v2 node
@@ -72,6 +86,7 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
+        use_sim_time_arg,
         obstacle_arg,
         degrees_arg,
         final_approach_arg,

@@ -25,6 +25,21 @@ using std::placeholders::_2;
 class ApproachServiceServer : public rclcpp::Node {
    public:
     ApproachServiceServer() : Node("approach_service_server_node") {
+        // Declare parameters with defaults for simulation
+        this->declare_parameter<std::string>("scan_topic", "/scan");
+        this->declare_parameter<std::string>("odom_topic", "/diffbot_base_controller/odom");
+        this->declare_parameter<std::string>("cmd_vel_topic", "/diffbot_base_controller/cmd_vel_unstamped");
+
+        // Get parameter values
+        std::string scan_topic = this->get_parameter("scan_topic").as_string();
+        std::string odom_topic = this->get_parameter("odom_topic").as_string();
+        std::string cmd_vel_topic = this->get_parameter("cmd_vel_topic").as_string();
+
+        RCLCPP_INFO(this->get_logger(), "Using topics:");
+        RCLCPP_INFO(this->get_logger(), "  scan: %s", scan_topic.c_str());
+        RCLCPP_INFO(this->get_logger(), "  odom: %s", odom_topic.c_str());
+        RCLCPP_INFO(this->get_logger(), "  cmd_vel: %s", cmd_vel_topic.c_str());
+
         // Create callback groups for concurrent execution
         service_callback_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
         timer_callback_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -38,14 +53,14 @@ class ApproachServiceServer : public rclcpp::Node {
 
         // Create subscriptions
         laser_sub_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
-            "/scan", 10, std::bind(&ApproachServiceServer::laser_callback, this, _1));
+            scan_topic, 10, std::bind(&ApproachServiceServer::laser_callback, this, _1));
 
         odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
-            "/diffbot_base_controller/odom", 10, std::bind(&ApproachServiceServer::odom_callback, this, _1));
+            odom_topic, 10, std::bind(&ApproachServiceServer::odom_callback, this, _1));
 
         // Create publishers
         vel_pub_ = this->create_publisher<geometry_msgs::msg::Twist>(
-            "/diffbot_base_controller/cmd_vel_unstamped", 10);
+            cmd_vel_topic, 10);
 
         elevator_up_pub_ = this->create_publisher<std_msgs::msg::String>("/elevator_up", 10);
 

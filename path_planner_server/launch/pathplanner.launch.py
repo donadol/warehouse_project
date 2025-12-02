@@ -90,12 +90,19 @@ def launch_setup(context, *args, **kwargs):
         output='screen'
     )
 
-    # Approach service server node
+    # Approach service server node with config based on use_sim_time
+    attach_shelf_dir = get_package_share_directory('attach_shelf')
+    approach_params_file = os.path.join(
+        attach_shelf_dir, 'config',
+        f'approach_params_{config_suffix}.yaml'
+    )
+
     approach_service_server_node = Node(
         package='attach_shelf',
         executable='approach_service_server_node',
         output='screen',
-        name='approach_service_server'
+        name='approach_service_server',
+        parameters=[approach_params_file, {'use_sim_time': use_sim_time == 'True'}]
     )
 
     return [

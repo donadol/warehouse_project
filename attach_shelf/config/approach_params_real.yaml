@@ -1,0 +1,5 @@
+approach_service_server_node:
+  ros__parameters:
+    scan_topic: "/scan"
+    odom_topic: "/odom"
+    cmd_vel_topic: "/cmd_vel"
