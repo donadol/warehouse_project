@@ -204,9 +204,51 @@ def main():
     time.sleep(1.0)  # Brief pause after attachment
 
     # ========================================================================
+    # STEP 4: Move backward with curved motion to clear the shelf area
+    # ========================================================================
+    node.get_logger().info('[Step 4/8] Moving backward from shelf with curved motion')
+
+    # Use curved backward motion to turn while backing out
+    distance = 1.75  # meters
+    curvature = 0.10  # rad/s (slight curve to turn while backing)
+    speed = 0.2  # m/s
+
+    backward_twist = Twist()
+    backward_twist.linear.x = -speed
+    backward_twist.angular.z = curvature
+
+    # Calculate duration based on distance and speed
+    duration = distance / speed
+    node.get_logger().info(f'Backing up {distance}m at {speed}m/s with curvature {curvature} for {duration:.1f}s')
+
+    start_time = node.get_clock().now()
+    while (node.get_clock().now() - start_time).nanoseconds / 1e9 < duration:
+        cmd_vel_pub.publish(backward_twist)
+        time.sleep(0.1)
+
+    # Add in-place rotation to finish the turn (about -45 degrees)
+    node.get_logger().info('Completing rotation in place...')
+    rotate_twist = Twist()
+    rotate_twist.angular.z = -0.7854  # -45 degrees in rad/s
+
+    rotate_duration = 3.0  # seconds
+    start_time = node.get_clock().now()
+    while (node.get_clock().now() - start_time).nanoseconds / 1e9 < rotate_duration:
+        cmd_vel_pub.publish(rotate_twist)
+        time.sleep(0.1)
+
+    # Stop the robot
+    stop_twist = Twist()
+    for _ in range(10):  # Send multiple stop commands to ensure robot stops
+        cmd_vel_pub.publish(stop_twist)
+        time.sleep(0.1)
+
+    node.get_logger().info('Successfully cleared shelf area and turned around')
+
+    # ========================================================================
     # STEP 5: Navigate to shipping position with shelf (avoiding cones)
     # ========================================================================
-    node.get_logger().info('[Step 5/7] Navigating to shipping position (avoiding cones)')
+    node.get_logger().info('[Step 5/8] Navigating to shipping position (avoiding cones)')
 
     shipping_pose = create_pose('shipping', navigator)
     navigator.goToPose(shipping_pose)
@@ -235,7 +277,7 @@ def main():
     # ========================================================================
     # STEP 6: Detach from shelf
     # ========================================================================
-    node.get_logger().info('[Step 6/7] Detaching from shelf')
+    node.get_logger().info('[Step 6/8] Detaching from shelf')
 
     # Lower the elevator
     node.get_logger().info('Lowering elevator...')
@@ -272,7 +314,7 @@ def main():
     # ========================================================================
     # STEP 7: Return to init position
     # ========================================================================
-    node.get_logger().info('[Step 7/7] Returning to init position')
+    node.get_logger().info('[Step 7/8] Returning to init position')
 
     init_pose = create_pose('init', navigator)
     navigator.goToPose(init_pose)
