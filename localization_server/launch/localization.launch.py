@@ -22,18 +22,22 @@ def generate_launch_description():
     localization_dir = get_package_share_directory('localization_server')
     path_planner_dir = get_package_share_directory('path_planner_server')
 
-    # Determine use_sim_time and AMCL config based on map file
+    # Determine use_sim_time and config files based on map file
     use_sim_time = PythonExpression([
-        "'warehouse_map_real.yaml' not in '", map_file_arg, "'"
+        "'real' not in '", map_file_arg, "'"
     ])
 
     nav2_yaml = PythonExpression([
-        "'", localization_dir, "/config/amcl_config_real.yaml' if 'warehouse_map_real.yaml' in '",
+        "'", localization_dir, "/config/amcl_config_real.yaml' if 'real' in '",
         map_file_arg, "' else '", localization_dir, "/config/amcl_config_sim.yaml'"
     ])
 
     rviz_config_dir = os.path.join(localization_dir, 'rviz', 'localization.rviz')
-    filters_yaml = os.path.join(path_planner_dir, 'config', 'filters.yaml')
+
+    filters_yaml = PythonExpression([
+        "'", path_planner_dir, "/config/filters_real.yaml' if 'real' in '",
+        map_file_arg, "' else '", path_planner_dir, "/config/filters_sim.yaml'"
+    ])
 
     # Map server node
     map_server_node = Node(
