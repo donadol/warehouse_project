@@ -108,14 +108,5 @@ def generate_launch_description():
         filter_mask_server,
         costmap_filter_info_server,
         lifecycle_manager_node,
-        rviz_node,
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                PathJoinSubstitution([
-                    FindPackageShare('localization_server'),
-                    'launch',
-                    'init_robot.launch.py'
-                ])
-            )
-        ),
+        rviz_node
     ])
