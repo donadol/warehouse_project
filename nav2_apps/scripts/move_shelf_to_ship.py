@@ -120,13 +120,9 @@ def main():
         Twist, '/diffbot_base_controller/cmd_vel_unstamped', 10
     )
 
-    node.get_logger().info('='*60)
     node.get_logger().info('Starting warehouse robot task...')
-    node.get_logger().info('='*60)
 
-    # ========================================================================
     # STEP 1: Set initial pose for localization
-    # ========================================================================
     node.get_logger().info('[Step 1/7] Setting initial pose for localization')
 
     initial_pose = create_pose('init', navigator)
@@ -139,9 +135,7 @@ def main():
 
     time.sleep(2.0)  # Give localization time to converge
 
-    # ========================================================================
     # STEP 2: Navigate to loading position
-    # ========================================================================
     node.get_logger().info('[Step 2/7] Navigating to loading position')
 
     loading_pose = create_pose('loading', navigator)
@@ -154,7 +148,7 @@ def main():
         feedback = navigator.getFeedback()
         if feedback and i % 10 == 0:
             eta = Duration.from_msg(feedback.estimated_time_remaining).nanoseconds / 1e9
-            node.get_logger().info(f'ETA to loading position: {eta:.0f} seconds')
+            node.get_logger().debug(f'ETA to loading position: {eta:.0f} seconds')
 
     # Check result
     result = navigator.getResult()
@@ -167,15 +161,13 @@ def main():
         node.get_logger().error('Navigation to loading position failed!')
         return
 
-    # ========================================================================
     # STEP 3: Attach to shelf
-    # ========================================================================
     node.get_logger().info('[Step 3/7] Attaching to shelf')
 
     # Wait for service to be available
     node.get_logger().info('Waiting for /approach_shelf service...')
     while not attach_client.wait_for_service(timeout_sec=1.0):
-        node.get_logger().info('Service not available, waiting...')
+        node.get_logger().debug('Service not available, waiting...')
 
     # Call the service
     request = GoToLoading.Request()
@@ -191,7 +183,7 @@ def main():
             node.get_logger().info('Successfully attached to shelf!')
 
             # Update footprint for shelf
-            node.get_logger().info('Updating robot footprint for shelf...')
+            node.get_logger().debug('Updating robot footprint for shelf...')
             update_footprint(node, FOOTPRINT_SHELF, with_shelf=True)
             node.get_logger().info('Robot footprint updated (0.55m octagon)')
         else:
@@ -203,9 +195,7 @@ def main():
 
     time.sleep(1.0)  # Brief pause after attachment
 
-    # ========================================================================
     # STEP 4: Move backward with curved motion to clear the shelf area
-    # ========================================================================
     node.get_logger().info('[Step 4/8] Moving backward from shelf with curved motion')
 
     # Use curved backward motion to turn while backing out
@@ -243,11 +233,9 @@ def main():
         cmd_vel_pub.publish(stop_twist)
         time.sleep(0.1)
 
-    node.get_logger().info('Successfully cleared shelf area and turned around')
+    node.get_logger().debug('Successfully cleared shelf area and turned around')
 
-    # ========================================================================
     # STEP 5: Navigate to shipping position with shelf (avoiding cones)
-    # ========================================================================
     node.get_logger().info('[Step 5/8] Navigating to shipping position (avoiding cones)')
 
     shipping_pose = create_pose('shipping', navigator)
@@ -260,8 +248,7 @@ def main():
         feedback = navigator.getFeedback()
         if feedback and i % 10 == 0:
             eta = Duration.from_msg(feedback.estimated_time_remaining).nanoseconds / 1e9
-            node.get_logger().info(f'ETA to shipping position: {eta:.0f} seconds')
-            node.get_logger().info('Avoiding cones area via keepout filter...')
+            node.get_logger().debug(f'ETA to shipping position: {eta:.0f} seconds')
 
     # Check result
     result = navigator.getResult()
@@ -274,9 +261,7 @@ def main():
         node.get_logger().error('Navigation to shipping position failed!')
         return
 
-    # ========================================================================
     # STEP 6: Detach from shelf
-    # ========================================================================
     node.get_logger().info('[Step 6/8] Detaching from shelf')
 
     # Lower the elevator
@@ -287,7 +272,7 @@ def main():
     time.sleep(2.0)  # Wait for elevator to lower
 
     # Back out from under the shelf (straight backward, no curvature)
-    node.get_logger().info('Backing out from under shelf...')
+    node.get_logger().debug('Backing out from under shelf...')
     distance = 1.5  # meters
     speed = 0.2  # m/s
 
@@ -310,18 +295,16 @@ def main():
         cmd_vel_pub.publish(stop_twist)
         time.sleep(0.1)
 
-    node.get_logger().info('Successfully detached from shelf!')
+    node.get_logger().debug('Successfully detached from shelf!')
 
     # Restore normal footprint
-    node.get_logger().info('Restoring normal robot footprint...')
+    node.get_logger().debug('Restoring normal robot footprint...')
     update_footprint(node, FOOTPRINT_NORMAL, with_shelf=False)
     node.get_logger().info('Robot footprint restored (0.30m octagon)')
 
     time.sleep(1.0)  # Brief pause after detachment
 
-    # ========================================================================
     # STEP 7: Return to init position
-    # ========================================================================
     node.get_logger().info('[Step 7/8] Returning to init position')
 
     init_pose = create_pose('init', navigator)
@@ -334,7 +317,7 @@ def main():
         feedback = navigator.getFeedback()
         if feedback and i % 10 == 0:
             eta = Duration.from_msg(feedback.estimated_time_remaining).nanoseconds / 1e9
-            node.get_logger().info(f'ETA to init position: {eta:.0f} seconds')
+            node.get_logger().debug(f'ETA to init position: {eta:.0f} seconds')
 
     # Check result
     result = navigator.getResult()
@@ -348,13 +331,9 @@ def main():
         node.get_logger().error('Navigation to init position failed!')
         return
 
-    # ========================================================================
     # TASK COMPLETE
-    # ========================================================================
-    node.get_logger().info('='*60)
     node.get_logger().info('WAREHOUSE TASK COMPLETED SUCCESSFULLY!')
     node.get_logger().info('Robot is ready to move another shelf.')
-    node.get_logger().info('='*60)
 
     # Cleanup
     node.destroy_node()
