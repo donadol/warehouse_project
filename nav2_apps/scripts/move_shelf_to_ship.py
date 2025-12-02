@@ -27,8 +27,8 @@ from attach_shelf.srv import GoToLoading
 # Waypoint positions [x, y, orientation_z, orientation_w]
 POSITIONS = {
     'init': [-0.198813, 0.200448, 0.0, 1.0],
-    'loading': [5.79634, -0.0424344, -0.707107, 0.707107],
-    'shipping': [2.61788, 1.3952, 0.707107, 0.707107],
+    'loading': [5.73901, -0.0424344, -0.707107, 0.707107],
+    'shipping': [2.53866, 1.61648, 0.707107, 0.707107],
 }
 
 # Footprint definitions (octagon shapes)
@@ -286,21 +286,29 @@ def main():
     elevator_down_pub.publish(elevator_down_msg)
     time.sleep(2.0)  # Wait for elevator to lower
 
-    # Back out from under the shelf
+    # Back out from under the shelf (straight backward, no curvature)
     node.get_logger().info('Backing out from under shelf...')
-    backup_twist = Twist()
-    backup_twist.linear.x = -0.1  # Slow reverse
+    distance = 1.5  # meters
+    speed = 0.2  # m/s
 
-    # Back up for 2 seconds
-    backup_duration = 2.0
+    backup_twist = Twist()
+    backup_twist.linear.x = -speed
+    backup_twist.angular.z = 0.0  # No curvature, straight backward
+
+    # Calculate duration based on distance and speed
+    duration = distance / speed
+    node.get_logger().info(f'Backing up {distance}m at {speed}m/s for {duration:.1f}s')
+
     start_time = node.get_clock().now()
-    while (node.get_clock().now() - start_time).nanoseconds / 1e9 < backup_duration:
+    while (node.get_clock().now() - start_time).nanoseconds / 1e9 < duration:
         cmd_vel_pub.publish(backup_twist)
         time.sleep(0.1)
 
     # Stop the robot
     stop_twist = Twist()
-    cmd_vel_pub.publish(stop_twist)
+    for _ in range(10):  # Send multiple stop commands to ensure robot stops
+        cmd_vel_pub.publish(stop_twist)
+        time.sleep(0.1)
 
     node.get_logger().info('Successfully detached from shelf!')
 
