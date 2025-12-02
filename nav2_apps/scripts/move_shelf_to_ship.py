@@ -27,7 +27,7 @@ from attach_shelf.srv import GoToLoading
 # Waypoint positions [x, y, orientation_z, orientation_w]
 POSITIONS = {
     'init': [-0.198813, 0.200448, 0.0, 1.0],
-    'loading': [5.61276, -0.44835, -0.707107, 0.707107],
+    'loading': [5.79634, -0.0424344, -0.707107, 0.707107],
     'shipping': [2.61788, 1.3952, 0.707107, 0.707107],
 }
 
