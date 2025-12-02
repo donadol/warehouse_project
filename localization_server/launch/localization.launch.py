@@ -4,6 +4,9 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, PythonExpression
 from launch_ros.actions import Node
+from launch.actions import IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
     # Declare launch arguments
@@ -105,5 +108,14 @@ def generate_launch_description():
         filter_mask_server,
         costmap_filter_info_server,
         lifecycle_manager_node,
-        rviz_node
+        rviz_node,
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                PathJoinSubstitution([
+                    FindPackageShare('localization_server'),
+                    'launch',
+                    'init_robot.launch.py'
+                ])
+            )
+        ),
     ])
