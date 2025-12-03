@@ -39,6 +39,6 @@ amcl:
     z_short: 0.05
     set_initial_pose: true
     initial_pose:
-        x: 2.68039
-        y: 0.0756521
-        yaw: 0.0
+        x: 2.86854
+        y: 0.0679181
+        yaw: -1.83698

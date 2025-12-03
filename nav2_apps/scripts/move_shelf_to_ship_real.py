@@ -26,9 +26,9 @@ from attach_shelf.srv import GoToLoading
 
 # Waypoint positions [x, y, orientation_z, orientation_w]
 POSITIONS = {
-    'init': [2.68039, 0.0756521, -0.801538, 0.597944],
-    'loading': [1.09443, -4.33109, 0.991341, 0.131313],
-    'shipping': [3.8371, -2.11927, -0.158483, 0.987362],
+    'init': [2.86854, 0.0679181, -0.794687, 0.60702],
+    'loading': [1.23159, -4.41577, 0.9845, 0.175383],
+    'shipping': [3.84222, -2.32182, -0.142095, 0.989853],
 }
 
 # Footprint definitions (octagon shapes)
