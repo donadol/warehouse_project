@@ -3,3 +3,4 @@ approach_service_server_node:
     scan_topic: "/scan"
     odom_topic: "/diffbot_base_controller/odom"
     cmd_vel_topic: "/diffbot_base_controller/cmd_vel_unstamped"
+    intensity_threshold: 8000.0

@@ -29,16 +29,19 @@ class ApproachServiceServer : public rclcpp::Node {
         this->declare_parameter<std::string>("scan_topic", "/scan");
         this->declare_parameter<std::string>("odom_topic", "/diffbot_base_controller/odom");
         this->declare_parameter<std::string>("cmd_vel_topic", "/diffbot_base_controller/cmd_vel_unstamped");
+        this->declare_parameter<double>("intensity_threshold", 8000.0);
 
         // Get parameter values
         std::string scan_topic = this->get_parameter("scan_topic").as_string();
         std::string odom_topic = this->get_parameter("odom_topic").as_string();
         std::string cmd_vel_topic = this->get_parameter("cmd_vel_topic").as_string();
+        intensity_threshold_ = this->get_parameter("intensity_threshold").as_double();
 
         RCLCPP_INFO(this->get_logger(), "Using topics:");
         RCLCPP_INFO(this->get_logger(), "  scan: %s", scan_topic.c_str());
         RCLCPP_INFO(this->get_logger(), "  odom: %s", odom_topic.c_str());
         RCLCPP_INFO(this->get_logger(), "  cmd_vel: %s", cmd_vel_topic.c_str());
+        RCLCPP_INFO(this->get_logger(), "Intensity threshold: %.1f", intensity_threshold_);
 
         // Create callback groups for concurrent execution
         service_callback_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -174,22 +177,43 @@ class ApproachServiceServer : public rclcpp::Node {
             return legs;
         }
 
-        const double INTENSITY_THRESHOLD = 8000.0;
         const int MIN_CONSECUTIVE = 3;  // Minimum consecutive readings to consider a leg
+
+        // Debug: Log scan statistics
+        double max_intensity = 0.0;
+        int max_intensity_idx = -1;
+        int count_above_threshold = 0;
+
+        for (size_t i = 0; i < last_laser_scan_->intensities.size(); i++) {
+            if (last_laser_scan_->intensities[i] > max_intensity) {
+                max_intensity = last_laser_scan_->intensities[i];
+                max_intensity_idx = i;
+            }
+            if (last_laser_scan_->intensities[i] >= intensity_threshold_) {
+                count_above_threshold++;
+            }
+        }
+
+        RCLCPP_INFO(this->get_logger(), "Scan stats: total_points=%zu, max_intensity=%.1f at idx=%d, above_threshold=%d (threshold=%.1f)",
+                    last_laser_scan_->intensities.size(), max_intensity, max_intensity_idx, count_above_threshold, intensity_threshold_);
 
         std::vector<int> high_intensity_indices;
 
         // Find all indices with high intensity
         for (size_t i = 0; i < last_laser_scan_->intensities.size(); i++) {
-            if (last_laser_scan_->intensities[i] >= INTENSITY_THRESHOLD) {
+            if (last_laser_scan_->intensities[i] >= intensity_threshold_) {
                 high_intensity_indices.push_back(i);
             }
         }
 
         if (high_intensity_indices.empty()) {
+            RCLCPP_WARN(this->get_logger(), "No high intensity readings found! Max intensity was %.1f, threshold is %.1f",
+                        max_intensity, intensity_threshold_);
             RCLCPP_INFO(this->get_logger(), "Detected %zu shelf legs", legs.size());
             return legs;
         }
+
+        RCLCPP_INFO(this->get_logger(), "Found %zu high intensity readings", high_intensity_indices.size());
 
         // Group consecutive indices into legs
         std::vector<std::vector<int>> leg_groups;
@@ -201,24 +225,42 @@ class ApproachServiceServer : public rclcpp::Node {
                 continue;
             }
 
+            // End of a group
             if (current_group.size() >= static_cast<size_t>(MIN_CONSECUTIVE)) {
                 leg_groups.push_back(current_group);
+                RCLCPP_INFO(this->get_logger(), "Found leg group: size=%zu, indices=[%d-%d]",
+                           current_group.size(), current_group.front(), current_group.back());
+            } else {
+                RCLCPP_DEBUG(this->get_logger(), "Rejected small group: size=%zu (min=%d)",
+                            current_group.size(), MIN_CONSECUTIVE);
             }
             current_group = {high_intensity_indices[i]};
         }
 
+        // Check last group
         if (current_group.size() >= static_cast<size_t>(MIN_CONSECUTIVE)) {
             leg_groups.push_back(current_group);
+            RCLCPP_INFO(this->get_logger(), "Found leg group: size=%zu, indices=[%d-%d]",
+                       current_group.size(), current_group.front(), current_group.back());
+        } else {
+            RCLCPP_DEBUG(this->get_logger(), "Rejected last small group: size=%zu (min=%d)",
+                        current_group.size(), MIN_CONSECUTIVE);
         }
 
+        RCLCPP_INFO(this->get_logger(), "Total leg groups found: %zu", leg_groups.size());
+
         // Convert groups to leg detections (use center of each group)
-        for (const auto& group : leg_groups) {
+        for (size_t i = 0; i < leg_groups.size(); i++) {
+            const auto& group = leg_groups[i];
             int center_idx = group[group.size() / 2];
             LegDetection leg;
             leg.index = center_idx;
             leg.angle = last_laser_scan_->angle_min + center_idx * last_laser_scan_->angle_increment;
             leg.range = last_laser_scan_->ranges[center_idx];
             legs.push_back(leg);
+
+            RCLCPP_INFO(this->get_logger(), "Leg %zu: center_idx=%d, angle=%.3f rad, range=%.3f m, intensity=%.1f",
+                       i, center_idx, leg.angle, leg.range, last_laser_scan_->intensities[center_idx]);
         }
 
         RCLCPP_INFO(this->get_logger(), "Detected %zu shelf legs", legs.size());
@@ -439,6 +481,9 @@ class ApproachServiceServer : public rclcpp::Node {
     double current_y_ = 0.0;
     double final_approach_start_x_ = 0.0;
     double final_approach_start_y_ = 0.0;
+
+    // Parameters
+    double intensity_threshold_ = 8000.0;
 };
 
 int main(int argc, char** argv) {

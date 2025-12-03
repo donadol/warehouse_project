@@ -3,3 +3,4 @@ approach_service_server_node:
     scan_topic: "/scan"
     odom_topic: "/odom"
     cmd_vel_topic: "/cmd_vel"
+    intensity_threshold: 4000.0
