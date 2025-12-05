@@ -1,4 +1,4 @@
-approach_service_server_node:
+/approach_service_server:
   ros__parameters:
     scan_topic: "/scan"
     odom_topic: "/diffbot_base_controller/odom"

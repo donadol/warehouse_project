@@ -9,11 +9,15 @@ def launch_setup(context, *args, **kwargs):
     # Get the use_sim_time value
     use_sim_time = LaunchConfiguration('use_sim_time').perform(context)
 
+    # Convert to boolean (handle 'True', 'true', 'False', 'false')
+    use_sim_time_bool = use_sim_time.lower() in ['true', '1', 'yes']
+
     # Get package directories
     path_planner_dir = get_package_share_directory('path_planner_server')
 
     # Select configuration files based on use_sim_time
-    config_suffix = 'sim' if use_sim_time == 'True' else 'real'
+    config_suffix = 'sim' if use_sim_time_bool else 'real'
+
     planner_yaml = os.path.join(path_planner_dir, 'config', f'planner_{config_suffix}.yaml')
     controller_yaml = os.path.join(path_planner_dir, 'config', f'controller_{config_suffix}.yaml')
     bt_navigator_yaml = os.path.join(path_planner_dir, 'config', f'bt_navigator_{config_suffix}.yaml')
@@ -21,7 +25,7 @@ def launch_setup(context, *args, **kwargs):
     rviz_config_dir = os.path.join(path_planner_dir, 'rviz', 'pathplanning.rviz')
 
     # Conditional cmd_vel remapping (only for sim)
-    cmd_vel_remapping = [('/cmd_vel', '/diffbot_base_controller/cmd_vel_unstamped')] if use_sim_time == 'True' else []
+    cmd_vel_remapping = [('/cmd_vel', '/diffbot_base_controller/cmd_vel_unstamped')] if use_sim_time_bool else []
 
     # Planner server node
     planner_server_node = Node(
@@ -30,7 +34,7 @@ def launch_setup(context, *args, **kwargs):
         name='planner_server',
         output='screen',
         parameters=[planner_yaml,
-                    {'use_sim_time': use_sim_time == 'True'}],
+                    {'use_sim_time': use_sim_time_bool}],
         remappings=cmd_vel_remapping
     )
 
@@ -41,7 +45,7 @@ def launch_setup(context, *args, **kwargs):
         name='controller_server',
         output='screen',
         parameters=[controller_yaml,
-                    {'use_sim_time': use_sim_time == 'True'}],
+                    {'use_sim_time': use_sim_time_bool}],
         remappings=cmd_vel_remapping
     )
 
@@ -52,7 +56,7 @@ def launch_setup(context, *args, **kwargs):
         name='bt_navigator',
         output='screen',
         parameters=[bt_navigator_yaml,
-                    {'use_sim_time': use_sim_time == 'True'}]
+                    {'use_sim_time': use_sim_time_bool}]
     )
 
     # Recoveries server node
@@ -62,7 +66,7 @@ def launch_setup(context, *args, **kwargs):
         name='recoveries_server',
         output='screen',
         parameters=[recovery_yaml,
-                    {'use_sim_time': use_sim_time == 'True'}],
+                    {'use_sim_time': use_sim_time_bool}],
         remappings=cmd_vel_remapping
     )
 
@@ -72,7 +76,7 @@ def launch_setup(context, *args, **kwargs):
         executable='lifecycle_manager',
         name='lifecycle_manager_pathplanner',
         output='screen',
-        parameters=[{'use_sim_time': use_sim_time == 'True'},
+        parameters=[{'use_sim_time': use_sim_time_bool},
                     {'autostart': True},
                     {'node_names': ['planner_server',
                                     'controller_server',
@@ -86,7 +90,7 @@ def launch_setup(context, *args, **kwargs):
         executable='rviz2',
         name='rviz2',
         arguments=['-d', rviz_config_dir],
-        parameters=[{'use_sim_time': use_sim_time == 'True'}],
+        parameters=[{'use_sim_time': use_sim_time_bool}],
         output='screen'
     )
 
@@ -102,7 +106,7 @@ def launch_setup(context, *args, **kwargs):
         executable='approach_service_server_node',
         output='screen',
         name='approach_service_server',
-        parameters=[approach_params_file, {'use_sim_time': use_sim_time == 'True'}]
+        parameters=[approach_params_file, {'use_sim_time': use_sim_time_bool}]
     )
 
     return [
