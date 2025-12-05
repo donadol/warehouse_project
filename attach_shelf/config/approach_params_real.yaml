@@ -1,7 +1,19 @@
 /approach_service_server:
   ros__parameters:
+    # Topics
     scan_topic: "/scan"
     odom_topic: "/odom"
     cmd_vel_topic: "/cmd_vel"
+
+    # Frames
+    global_frame: "map"
     odom_frame: "robot_odom"
-    intensity_threshold: 4000.0
+    base_frame: "base_link"
+
+    # Laser intensity detection (adaptive threshold)
+    intensity_thres_fact: 0.80  # 80% of max intensity (0.0 = use absolute threshold)
+    intensity_threshold: 4000.0  # Fallback absolute threshold if factor = 0
+
+    # Cart frame alignment distances
+    align_ahead_dist: 0.35      # Distance ahead of cart for alignment frame
+    align_cart_center_dist: 0.34  # Distance into cart for center frame
