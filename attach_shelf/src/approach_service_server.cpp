@@ -29,18 +29,22 @@ class ApproachServiceServer : public rclcpp::Node {
         this->declare_parameter<std::string>("scan_topic", "/scan");
         this->declare_parameter<std::string>("odom_topic", "/diffbot_base_controller/odom");
         this->declare_parameter<std::string>("cmd_vel_topic", "/diffbot_base_controller/cmd_vel_unstamped");
+        this->declare_parameter<std::string>("odom_frame", "odom");
         this->declare_parameter<double>("intensity_threshold", 8000.0);
 
         // Get parameter values
         std::string scan_topic = this->get_parameter("scan_topic").as_string();
         std::string odom_topic = this->get_parameter("odom_topic").as_string();
         std::string cmd_vel_topic = this->get_parameter("cmd_vel_topic").as_string();
+        odom_frame_ = this->get_parameter("odom_frame").as_string();
         intensity_threshold_ = this->get_parameter("intensity_threshold").as_double();
 
         RCLCPP_INFO(this->get_logger(), "Using topics:");
         RCLCPP_INFO(this->get_logger(), "  scan: %s", scan_topic.c_str());
         RCLCPP_INFO(this->get_logger(), "  odom: %s", odom_topic.c_str());
         RCLCPP_INFO(this->get_logger(), "  cmd_vel: %s", cmd_vel_topic.c_str());
+        RCLCPP_INFO(this->get_logger(), "Using frames:");
+        RCLCPP_INFO(this->get_logger(), "  odom_frame: %s", odom_frame_.c_str());
         RCLCPP_INFO(this->get_logger(), "Intensity threshold: %.1f", intensity_threshold_);
 
         // Create callback groups for concurrent execution
@@ -306,10 +310,10 @@ class ApproachServiceServer : public rclcpp::Node {
         // Transform to odom frame using TF2
         geometry_msgs::msg::PointStamped point_in_odom;
         try {
-            point_in_odom = tf_buffer_->transform(point_in_laser, "odom", tf2::durationFromSec(1.0));
+            point_in_odom = tf_buffer_->transform(point_in_laser, odom_frame_, tf2::durationFromSec(1.0));
 
-            RCLCPP_DEBUG(this->get_logger(), "Cart frame transformed to odom: x=%.2f, y=%.2f",
-                         point_in_odom.point.x, point_in_odom.point.y);
+            RCLCPP_DEBUG(this->get_logger(), "Cart frame transformed to %s: x=%.2f, y=%.2f",
+                         odom_frame_.c_str(), point_in_odom.point.x, point_in_odom.point.y);
         } catch (tf2::TransformException& ex) {
             RCLCPP_ERROR(this->get_logger(), "TF2 transform failed: %s", ex.what());
             return;
@@ -318,7 +322,7 @@ class ApproachServiceServer : public rclcpp::Node {
         // Broadcast static TF in odom frame
         geometry_msgs::msg::TransformStamped transform;
         transform.header.stamp = this->now();
-        transform.header.frame_id = "odom";
+        transform.header.frame_id = odom_frame_;
         transform.child_frame_id = "cart_frame";
 
         transform.transform.translation.x = point_in_odom.point.x;
@@ -483,6 +487,7 @@ class ApproachServiceServer : public rclcpp::Node {
     double final_approach_start_y_ = 0.0;
 
     // Parameters
+    std::string odom_frame_ = "odom";
     double intensity_threshold_ = 8000.0;
 };
 

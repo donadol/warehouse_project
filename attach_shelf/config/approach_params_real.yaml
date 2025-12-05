@@ -3,4 +3,5 @@
     scan_topic: "/scan"
     odom_topic: "/odom"
     cmd_vel_topic: "/cmd_vel"
+    odom_frame: "robot_odom"
     intensity_threshold: 4000.0
